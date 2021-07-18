@@ -1,6 +1,19 @@
-fun main(args: Array<String>) {
-    println("Hello World!")
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.runBlocking
+import java.net.URL
 
-    // Try adding program arguments at Run/Debug configuration
-    println("Program arguments: ${args.joinToString()}")
+fun main(args: Array<String>) {
+    println("Hello World! (${args.joinToString()})")
+
+    runBlocking {
+        URL("kev3bot.firestore.com/points").toScript()
+            .distinctUntilChanged()
+            .collectIndexed { index, (x,y) ->
+                println("$index: $x,$y")
+            }
+    }
+
 }
+
+
