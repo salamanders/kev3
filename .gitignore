@@ -224,3 +224,11 @@ $RECYCLE.BIN/
 /.idea/jarRepositories.xml
 /.idea/misc.xml
 /.idea/vcs.xml
+/debug.svg
+/visibleSpace.png
+/target/antrun/build-main.xml
+/target/classes/META-INF/consoleApp.kotlin_module
+/target/maven-status/maven-compiler-plugin/compile/java-compile/inputFiles.lst
+/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+/target/classes/META-INF/kev3.kotlin_module
+/target/maven-archiver/pom.properties

@@ -1,0 +1,59 @@
+// find the 4 walls of the area that we can reach.
+//bottom
+// 56(near) to 141(far)
+//println("y=$y\t" + distanceBetween(target, effectorLoc) + "\t" + (distanceToTarget <= chain.solveDistanceThreshold))
+//structure.debugSVG(target)
+
+
+fun calibrate(shoulder: RegulatedMotor, elbow: RegulatedMotor) {
+
+shoulder.speed = (shoulder.maxSpeed * .5).toInt()
+elbow.speed = (elbow.maxSpeed * .5).toInt()
+
+val tlcd = LocalEV3.ev3.textLCD
+
+"Position both Straight Up, then OK".let {
+println(it)
+tlcd.clear()
+tlcd.drawString(it, 4, 2)
+}
+pressButtonsUntilPose(shoulder = shoulder, elbow = elbow)
+
+
+"Position 'L' shape, then OK".let {
+println(it)
+tlcd.clear()
+tlcd.drawString(it, 4, 2)
+}
+pressButtonsUntilPose(shoulder = shoulder, elbow = elbow)
+"Shoulder: ${shoulder.tachoCount}, Elbow: ${elbow.tachoCount}".let {
+println(it)
+tlcd.clear()
+tlcd.drawString(it, 4, 2)
+}
+}
+
+
+// drawing the reachable area
+val maxLength = chain.chainLength.toInt()
+println("maxLength: $maxLength")
+val image = BufferedImage(maxLength*2+1, maxLength*2+1, BufferedImage.TYPE_INT_RGB)
+val goodSpace = Color(0, 255, 0)
+for(x in -maxLength .. maxLength) {
+for(y in -maxLength..maxLength) {
+val target = Vec2f(x.toFloat(), y.toFloat())
+val distanceToTarget = chain.solveForTarget(target)
+if(distanceToTarget <= chain.solveDistanceThreshold) {
+    image.setRGB(x+maxLength, y+maxLength, goodSpace.rgb)
+}
+}
+}
+ImageIO.write(image, "png", File("visibleSpace.png"))
+
+
+To SSH into the robot:
+
+root@EV3:/home/lejos/programs# jrun -cp whiteboardbot-0.0.1-SNAPSHOT-jar-with-dependencies.jar info.benjaminhill.wbb.MainKt
+
+To view console Run ev3console or Eclipse: ev3control
+http://www.lejos.org/ev3/docs/
