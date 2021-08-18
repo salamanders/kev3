@@ -17,21 +17,22 @@ fun FabrikChain2D.bones(): List<FabrikBone2D> = (0 until numBones).map { getBone
 
 fun FabrikStructure2D.debugLog() {
     chains().forEachIndexed { ci, chain ->
-        println()
+        LOG.info { "# Chain $ci"}
         chain.bones().forEachIndexed { bi, bone ->
-            LOG.info { "Chain $ci Bone $bi" }
-            LOG.info { "  dir: ${bone.directionUV}" }
-            LOG.info { "  Angle:${bone.directionUV.getSignedAngleDegsTo(UP)}" }
+            LOG.info { "## Chain $ci Bone $bi" }
+            LOG.info { " * endLocation:  -> ${bone.endLocation}" }
+            LOG.info { " * dir: ${bone.directionUV}" }
+            LOG.info { " * angle:${bone.directionUV.getSignedAngleDegsTo(UP)}" }
             if (bi > 0) {
-                LOG.info { "  Angle from previous: ${chain.getBone(bi - 1).directionUV.getSignedAngleDegsTo(bone.directionUV)}" }
+                LOG.info { " * angle from previous: ${chain.getBone(bi - 1).directionUV.getSignedAngleDegsTo(bone.directionUV)}" }
             }
-            LOG.info { "  Loc:  -> ${bone.endLocation}" }
+
         }
     }
 }
 
 fun FabrikStructure2D.debugSVG(
-    target: Vec2f? = null
+    target: Vec2f? = getChain(0).lastTargetLocation
 ) {
     File("debug.svg").printWriter().use { pw ->
         pw.println("""<svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">""")

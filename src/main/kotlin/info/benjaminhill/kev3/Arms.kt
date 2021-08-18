@@ -12,13 +12,14 @@ import lejos.hardware.port.MotorPort
 import lejos.robotics.RegulatedMotor
 import lejos.robotics.geometry.Rectangle2D
 import mu.KotlinLogging
+import kotlin.math.roundToInt
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 private val LOG = KotlinLogging.logger {}
 
 private const val boneLengthLego0 = 41
-private const val boneLengthLego1 = 41
+private const val boneLengthLego1 = 40
 
 @ExperimentalTime
 object Arms {
@@ -43,36 +44,59 @@ object Arms {
     // KINEMATICS
     private val bone0: FabrikBone2D
     private val bone1: FabrikBone2D
-    private val chain = FabrikChain2D().apply {
-        setFixedBaseMode(true)
-        baseboneConstraintType = FabrikChain2D.BaseboneConstraintType2D.GLOBAL_ABSOLUTE
-        // Create a new 2D chain
-        addBone(FabrikBone2D(Vec2f(0f, 0f), UP, boneLengthLego0.toFloat(), 90f, 90f))
-        addConsecutiveConstrainedBone(UP, boneLengthLego0.toFloat(), 160f, 160f)
-        bone0 = getBone(0)
-        bone1 = getBone(1)
-    }
+    private val drawingArea: Rectangle2D.Float
 
     // Required?
-    private val structure = FabrikStructure2D().apply {
-        addChain(chain)
+    private val structure = FabrikStructure2D().also { str ->
+        str.addChain(FabrikChain2D().also { chain ->
+            chain.setFixedBaseMode(true)
+            chain.baseboneConstraintType = FabrikChain2D.BaseboneConstraintType2D.GLOBAL_ABSOLUTE
+            // Create a new 2D chain
+            chain.addBone(FabrikBone2D(Vec2f(0f, 0f), UP, boneLengthLego0.toFloat(), 90f, 90f))
+            bone0 = chain.getBone(0)
+            LOG.info { "Added upper bone" }
+            chain.addConsecutiveConstrainedBone(UP, boneLengthLego1.toFloat(), 160f, 160f)
+            bone1 = chain.getBone(1)
+            LOG.info { "Added lower bone" }
+        })
+        str.setFixedBaseMode(true)
+        // reach far to the upper-right to find the bounds
+        val maxReach = (boneLengthLego0 + boneLengthLego1).toFloat()
+        str.solveForTarget(Vec2f(maxReach, maxReach))
+        val upperRight = str.getChain(0).effectorLocation
+        drawingArea = Rectangle2D.Float(
+            -upperRight.x.roundToInt().toFloat(),
+            0f,
+            (upperRight.x * 2).roundToInt().toFloat(),
+            upperRight.y.roundToInt().toFloat()
+        )
+        LOG.info { "Drawing area: ${drawingArea.str()}" }
     }
 
-    // DRAWING AREA
-    private const val maxReach = (boneLengthLego0 + boneLengthLego1).toFloat()
-    private val drawingArea = Rectangle2D.Float(-maxReach / 2, 0f, maxReach, maxReach)
+    /** Real-world scale */
+    private var location: Vec2f
+        get() = structure.getChain(0).effectorLocation
+        set(targetLocation) {
+            // TODO: Partial moves to make the strokes linear.
+            structure.solveForTarget(targetLocation)
+            val dist = Vec2f.distanceBetween(location, targetLocation)
+            LOG.info { "  location.set($targetLocation) solved to $location with dist:$dist" }
+        }
 
     fun moveTo(x: Float, y: Float) {
         require(x in 0f..1f) { "moveTo bad x:$x" }
         require(y in 0f..1f) { "moveTo bad y:$y" }
-        val scaledX = drawingArea.x + x * drawingArea.width
-        val scaledY = drawingArea.y + y * drawingArea.height
-        chain.solveForTarget(scaledX, scaledY)
-        println(
-            "target ($x, $y), scaled ($scaledX, $scaledY), " +
-                    "angles (0:${bone0.directionUV.getSignedAngleDegsTo(UP)}, " +
-                    "1:${bone0.directionUV.getSignedAngleDegsTo(bone1.directionUV)})"
-        )
+        val scaledX = x * drawingArea.width - drawingArea.x
+        val scaledY = y * drawingArea.height - drawingArea.y
+        val scaledTarget = Vec2f(scaledX, scaledY)
+        LOG.info { "moveTo($x, $y), scaled to:$scaledTarget" }
+        location = scaledTarget
+        LOG.info {
+            "moveTo: ${structure.getChain(0).lastTargetLocation}, solved to:${location}"
+        }
+        structure.debugLog()
+        structure.debugSVG()
+
     }
 
     init {
