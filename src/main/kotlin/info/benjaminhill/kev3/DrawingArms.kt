@@ -1,52 +1,28 @@
 package info.benjaminhill.kev3
 
-
 import au.edu.federation.caliko.FabrikBone2D
 import au.edu.federation.caliko.FabrikChain2D
 import au.edu.federation.caliko.FabrikStructure2D
 import au.edu.federation.utils.Vec2f
-import kotlinx.coroutines.runBlocking
+import info.benjaminhill.utils.r
 import lejos.hardware.Button
-import lejos.hardware.motor.EV3LargeRegulatedMotor
-import lejos.hardware.port.MotorPort
 import lejos.robotics.RegulatedMotor
 import lejos.robotics.geometry.Rectangle2D
 import mu.KotlinLogging
 import kotlin.math.roundToInt
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
-
-private val LOG = KotlinLogging.logger {}
-
-private const val boneLengthLego0 = 41
-private const val boneLengthLego1 = 40
 
 @ExperimentalTime
-object Arms {
+class DrawingArms : MotorWrapper() {
     // MOTORS
-    /** Keep the delegate for making shutdown/close optional. */
-    private val shoulderDelegate: Lazy<EV3LargeRegulatedMotor> = lazy {
-        EV3LargeRegulatedMotor(MotorPort.A).also {
-            LOG.info { "Connected to shoulder:A" }
-        }
-    }
-    private val shoulder: RegulatedMotor by shoulderDelegate
-
-    /** Keep the delegate for making shutdown/close optional. */
-    private val elbowDelegate: Lazy<EV3LargeRegulatedMotor> = lazy {
-        EV3LargeRegulatedMotor(MotorPort.D).also {
-            LOG.info { "Connected to elbow:D" }
-        }
-    }
-    private val elbow: RegulatedMotor by elbowDelegate
-
+    private val shoulder: RegulatedMotor by motorADelegate
+    private val elbow: RegulatedMotor by motorDDelegate
 
     // KINEMATICS
     private val bone0: FabrikBone2D
     private val bone1: FabrikBone2D
     private val drawingArea: Rectangle2D.Float
 
-    // Required?
     private val structure = FabrikStructure2D().also { str ->
         str.addChain(FabrikChain2D().also { chain ->
             chain.setFixedBaseMode(true)
@@ -80,49 +56,19 @@ object Arms {
             // TODO: Partial moves to make the strokes linear.
             structure.solveForTarget(targetLocation)
             val dist = Vec2f.distanceBetween(location, targetLocation)
-            LOG.info { "  location.set($targetLocation) solved to $location with dist:$dist" }
+            LOG.info { "  location.set($targetLocation) solved to $location with dist:${dist.r}" }
+            // TODO: Actually move the motors!
         }
 
-    fun moveTo(x: Float, y: Float) {
-        require(x in 0f..1f) { "moveTo bad x:$x" }
-        require(y in 0f..1f) { "moveTo bad y:$y" }
-        val scaledX = x * drawingArea.width - drawingArea.x
-        val scaledY = y * drawingArea.height - drawingArea.y
-        val scaledTarget = Vec2f(scaledX, scaledY)
-        LOG.info { "moveTo($x, $y), scaled to:$scaledTarget" }
+    fun moveTo(x: Float, y: Float) = moveTo(Vec2f(x, y))
+
+    private fun moveTo(target: Vec2f) {
+        val scaledTarget = target.scaleUnitTo(drawingArea)
+        LOG.info { "moveTo($target)" }
         location = scaledTarget
-        LOG.info {
-            "moveTo: ${structure.getChain(0).lastTargetLocation}, solved to:${location}"
-        }
-        structure.debugLog()
-        structure.debugSVG()
 
-    }
-
-    init {
-        Runtime.getRuntime().addShutdownHook(object : Thread() {
-            override fun run() = runBlocking {
-                val shutdownTime = measureTime {
-                    LOG.warn { "Graceful shut down:start" }
-                    if (shoulderDelegate.isInitialized()) {
-                        LOG.warn { "Closing Shoulder" }
-                        shoulder.flt(true)
-                        shoulder.close()
-                    } else {
-                        LOG.info { "Shoulder was never opened." }
-                    }
-                    if (elbowDelegate.isInitialized()) {
-                        LOG.warn { "Closing Elbow" }
-                        elbow.flt(true)
-                        elbow.close()
-                    } else {
-                        LOG.info { "Elbow was never opened." }
-                    }
-                }
-                println("Graceful shut down:end in $shutdownTime")
-            }
-        })
-        LOG.info { "Motor shutdown hook registered." }
+        //structure.debugLog()
+        //structure.debugSVG()
     }
 
     /** Match the real world to the imagined position */
@@ -157,9 +103,26 @@ object Arms {
                     // Allows emergency bail
                     shoulder.flt(true)
                     elbow.flt(true)
-                    throw Exception("Bailed on calibration.")
+                    throw Exception("Emergency exit from calibration.")
                 }
             }
         }
     }
+
+    companion object {
+        private val LOG = KotlinLogging.logger {}
+
+        // Units: number of lego studs
+        private const val boneLengthLego0 = 41
+        private const val boneLengthLego1 = 40
+
+        private fun Vec2f.scaleUnitTo(drawingArea: Rectangle2D): Vec2f {
+            require(x in 0f..1f) { "Unit Vec2f had out of bounds x:$x" }
+            require(y in 0f..1f) { "Unit Vec2f had out of bounds y:$y" }
+            val scaledX = drawingArea.x + (drawingArea.width * x)
+            val scaledY = drawingArea.y + (drawingArea.height * y)
+            return Vec2f(scaledX.toFloat(), scaledY.toFloat())
+        }
+    }
 }
+

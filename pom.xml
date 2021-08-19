@@ -269,7 +269,7 @@
         <dependency>
             <groupId>com.github.salamanders</groupId>
             <artifactId>utils</artifactId>
-            <version>d152f69621</version>
+            <version>a2bcd525c3</version>
         </dependency>
 
         <dependency>

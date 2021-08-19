@@ -1,3 +1,29 @@
+/**
+ * Given a URL to a script of xCoordinate,yCoordinate\n...
+ * @return a flow of key points to seek
+ *
+ * Short term: grab the whole script
+ * Long term: handle huge scripts (flow)
+ */
+fun URL.readTSV(): List<Point2D.Double> = this.readTextGZ()
+    .map { it.trim() }
+    .filter { line ->
+        line.isNotBlank() &&
+                !line.startsWith('#') &&
+                line.contains('t')
+
+    }
+    .mapNotNull {
+        try {
+            val (x, y) = it.split(',')
+            Point2D.Double(x.toDouble(), y.toDouble())
+        } catch (e: NumberFormatException) {
+            LOG.warn { "Skipping bad script line parse: $it $e" }
+            null
+        }
+    }
+
+
 // find the 4 walls of the area that we can reach.
 //bottom
 // 56(near) to 141(far)
