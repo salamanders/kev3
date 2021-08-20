@@ -10,21 +10,20 @@ import java.io.File
 private val LOG = KotlinLogging.logger {}
 
 val UP = Vec2f(0f, 1f)
-val LEFT = Vec2f(1f, 0f)
 
 fun FabrikStructure2D.chains(): List<FabrikChain2D> = (0 until numChains).map { getChain(it) }
 fun FabrikChain2D.bones(): List<FabrikBone2D> = (0 until numBones).map { getBone((it)) }
 
 fun FabrikStructure2D.debugLog() {
     chains().forEachIndexed { ci, chain ->
-        LOG.info { "# Chain $ci"}
+        LOG.info { "# Chain $ci" }
         chain.bones().forEachIndexed { bi, bone ->
             LOG.info { "## Chain $ci Bone $bi" }
             LOG.info { " * endLocation:  -> ${bone.endLocation}" }
             LOG.info { " * dir: ${bone.directionUV}" }
             LOG.info { " * angle:${bone.directionUV.getSignedAngleDegsTo(UP)}" }
             if (bi > 0) {
-                LOG.info { " * angle from previous: ${chain.getBone(bi - 1).directionUV.getSignedAngleDegsTo(bone.directionUV)}" }
+                LOG.info { " * angle from previous2: ${chain.getBone(bi).directionUV.getSignedAngleDegsTo(chain.getBone(bi - 1).directionUV)}" }
             }
 
         }

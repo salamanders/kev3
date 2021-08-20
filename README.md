@@ -4,13 +4,14 @@ Or "stuffing modern tech into an old LEGO ev3 to see if it works while cackling 
 
 ## Bugs
 
-* Needs the path.  `jrun -cp "/home/lejos/programs/kev3-1.0-SNAPSHOT.jar:/home/root/lejos/lib/*" info.benjaminhill.kev3.MainKt`
-* Caliko is compiled with JDK11.  Recompiled locally with JDK8.
+* Needs the
+  path.  `jrun -cp "/home/lejos/programs/kev3-1.0-SNAPSHOT.jar:/home/root/lejos/lib/*" info.benjaminhill.kev3.MainKt`
+* Caliko is compiled with JDK11. Recompiled locally with JDK8.
 * Issue with HTTPS/SSL.  `date -s "2021-07-29 05:31:00"`
 * Code deploy run loop is too many commands.
 * java.lang.UnsupportedOperationException: Remote regulators are not supported
-* Missing the JNA dependency will make you smack face on keyboard.  Tried removing extra jna.
-* 
+* Missing the JNA dependency will make you smack face on keyboard. Tried removing extra jna.
+*
 
 ## Setup LeJOS (Java 1.8) on EV3
 
@@ -18,8 +19,8 @@ Or "stuffing modern tech into an old LEGO ev3 to see if it works while cackling 
 2. Reformat ~2gb microSD disk as MS DOS (FAT) to avoid permission bug in balena etcher
 3. Flash sd500.img as a nice baseline.
 4. unzip the lejosimage.zip file from the leJOS home directory to the root directory of the card
-5. You want JRE 1.8. The webpage has 1.7. 😖 
-6. Grab ejdk1.8.0.  From: Java 8 support - leJOS (don't forget that `-g`, it matters!)
+5. You want JRE 1.8. The webpage has 1.7. 😖
+6. Grab ejdk1.8.0. From: Java 8 support - leJOS (don't forget that `-g`, it matters!)
     * `export JAVA_HOME=$(/usr/libexec/java_home -v1.8)`
     * `./jrecreate.sh -g --dest ejre-8-b132-linux-arm-sflt --profile compact2 --vm client`
     * `tar czf ejre-8-b132-linux-arm-sflt.tar.gz ejre-8-b132-linux-arm-sflt`
@@ -35,6 +36,7 @@ root@EV3:/# /home/root/lejos/ejre-8-b132-linux-arm-sflt/bin/java -version
 # java version "1.8.0"
 # Java(TM) SE Embedded Runtime Environment (build 1.8.0-b132, profile compact2, headless)
 ```
+
 ... all looks good!
 
 ## Setup Local Dev Env
@@ -70,10 +72,9 @@ firebase init
 # In the FireBase console, create your empty Firestore Database, fill in your own PROJECT_ID and API_KEY.
 ```
 
-The ev3's wifi dongle is... not fast.  (maybe 20KB/sec).
-You will want to 1-time copy over all the files from 
-`mvn dependency:copy-dependencies` to the robot, so each time you
-build/deploy/test you only have to move the very small app-code only jar file over. 
+The ev3's wifi dongle is... not fast.  (maybe 20KB/sec). You will want to 1-time copy over all the files from
+`mvn dependency:copy-dependencies` to the robot, so each time you build/deploy/test you only have to move the very small
+app-code only jar file over.
 **Do this whenever you update your maven dependencies.**
 
     scp -c aes256-cbc -oKexAlgorithms=+diffie-hellman-group1-sha1 ./target/dependency/*.jar root@192.168.86.45:/home/root/lejos/lib/
