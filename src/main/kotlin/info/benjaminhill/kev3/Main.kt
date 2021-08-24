@@ -16,6 +16,7 @@ fun main(args: Array<String>) = try {
     if (args.isNotEmpty()) {
         LOG.info { "args: ${args.joinToString()}" }
     }
+
     DrawingArms().use { arms ->
         // arms.calibrate()
 

@@ -23,7 +23,15 @@ fun FabrikStructure2D.debugLog() {
             LOG.info { " * dir: ${bone.directionUV}" }
             LOG.info { " * angle:${bone.directionUV.getSignedAngleDegsTo(UP)}" }
             if (bi > 0) {
-                LOG.info { " * angle from previous2: ${chain.getBone(bi).directionUV.getSignedAngleDegsTo(chain.getBone(bi - 1).directionUV)}" }
+                LOG.info {
+                    " * angle from previous2: ${
+                        chain.getBone(bi).directionUV.getSignedAngleDegsTo(
+                            chain.getBone(
+                                bi - 1
+                            ).directionUV
+                        )
+                    }"
+                }
             }
 
         }
